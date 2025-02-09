@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: privacy-safe-photos
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn test_server:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.8.0
+    autoDeploy: true
