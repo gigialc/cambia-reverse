@@ -9,10 +9,14 @@ RUN apt-get update && apt-get install -y \
     liblapack-dev \
     libx11-dev \
     libgtk-3-dev \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
+
+# Install dlib using pip (pre-built wheel)
+RUN pip3 install dlib==19.24.0
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
