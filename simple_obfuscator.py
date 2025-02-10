@@ -60,32 +60,36 @@ def compare_faces(original_encodings, processed_encodings, threshold=0.6):
             
     return results
 
-def process_image(input_path, output_path):
+def process_image(image_path):
+    """Process an image by pixelating detected faces."""
     # Read image
-    image = cv2.imread(input_path)
+    image = cv2.imread(image_path)
     if image is None:
-        raise ValueError("Could not read the image")
+        raise ValueError("Could not read image")
+
+    # Convert BGR to RGB (face_recognition uses RGB)
+    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     
-    # Get original face analysis
-    original_count, original_encodings = analyze_faces(input_path)
+    # Find face locations
+    face_locations = face_recognition.face_locations(rgb_image)
     
-    # Process image
-    processed = pixelate_face(image.copy())
+    # For each face, apply pixelation
+    for (top, right, bottom, left) in face_locations:
+        # Extract the face region
+        face_roi = image[top:bottom, left:right]
+        
+        # Pixelate by scaling down and up
+        pixel_size = max(right-left, bottom-top) // 20
+        if pixel_size < 1:
+            pixel_size = 1
+            
+        h, w = face_roi.shape[:2]
+        small = cv2.resize(face_roi, (w//pixel_size, h//pixel_size), 
+                          interpolation=cv2.INTER_LINEAR)
+        pixelated = cv2.resize(small, (w, h), 
+                              interpolation=cv2.INTER_NEAREST)
+        
+        # Put the pixelated face back into the image
+        image[top:bottom, left:right] = pixelated
     
-    # Save processed image
-    cv2.imwrite(output_path, processed)
-    
-    # Get processed face analysis
-    processed_count, processed_encodings = analyze_faces(output_path)
-    
-    # Compare faces
-    comparison_results = compare_faces(original_encodings, processed_encodings)
-    
-    # Prepare analysis results
-    analysis = {
-        'original_faces': original_count,
-        'processed_faces': processed_count,
-        'face_comparisons': comparison_results
-    }
-    
-    return analysis
+    return image

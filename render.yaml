@@ -3,8 +3,14 @@ services:
     name: privacy-safe-photos
     env: python
     buildCommand: ./build.sh
-    startCommand: gunicorn test_server:app
+    startCommand: gunicorn test_server:app --workers 4 --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.8.0
+      - key: MAX_UPLOAD_SIZE
+        value: 16777216
+    disk:
+      name: uploads
+      mountPath: /uploads
+      sizeGB: 1
     autoDeploy: true
